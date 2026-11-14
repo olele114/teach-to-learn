@@ -1,129 +1,142 @@
 # Teach to Learn
 
-一个面向学习者的中文 agent skill：先确定你要做成什么，再通过诊断、小课、真实作答、复习和迁移任务帮助你逐步独立完成。
-适合多次学习编程、语言、课程概念或工作技能；单次问题也可以直接问助手，无需建立学习目录。
+**English** | [简体中文](README_CN.md)
 
-## 相比原版 teach 改进了什么
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Agent Skill](https://img.shields.io/badge/Agent_Skill-Codex_CLI-black.svg)
+![Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg)
 
-基于 [Matt Pocock 的 teach](https://github.com/mattpocock/skills/tree/5863806dd4e15c63174bee4e7515a4256792ecfa/skills/productivity/teach) 重新设计，保留目标驱动、可信来源、小课和跨会话记录。
+> **Stop mistaking "I understood the AI's explanation" for actual mastery.**
+> A learner-focused Agent Skill that defines observable completion criteria first, then guides you to independent execution through diagnostic checks, 5–15 minute micro-lessons, open-ended active recall, spaced repetition, and unseen transfer tasks.
 
-| 该版本的不足或风险 | 本 skill 的具体调整 |
+Ideal for multi-session learning in programming, languages, academic concepts, or workplace skills. For quick one-off questions, ask your assistant directly without setting up a learning directory.
+
+```text
+Observable Goal ─▶ Short Diagnostics (≤3) ─▶ 5–15 min Micro-Lesson ─▶ Open-Ended Attempt ─▶ Evidence & 1/3/7/14d Review Queue ─▶ Unseen Transfer Task
+```
+
+*(Note: `SKILL.md` and `references/` are authored in Chinese and instruct the model to default to the user's language, so you can interact with it in English or Chinese directly.)*
+
+## What Changed Compared to the Original `teach`
+
+Redesigned based on [Matt Pocock's `teach`](https://github.com/mattpocock/skills/tree/5863806dd4e15c63174bee4e7515a4256792ecfa/skills/productivity/teach), preserving goal-driven learning, trusted sources, micro-lessons, and cross-session tracking while addressing key failure modes:
+
+| Limitation or Risk in Upstream | Specific Adjustment in `teach-to-learn` |
 | --- | --- |
-| 首轮从目标和自述推断水平 | 最多三个诊断任务，区分自述与观察；允许跳过 |
-| 只提出间隔练习原则 | 可调整的 1、3、7、14 天队列，明确失败、跳过和逾期处理 |
-| 不容易判断何时结束 | 先约定可观察标准，完成新迁移任务后转入实践或结束 |
-| 选择题答案位置可能泄露线索 | 默认开放回忆和演示；选择题答对不作为独立掌握证据 |
-| 读过材料容易被误当成学会 | 记录真实作答和提示程度；区分初步独立与延迟巩固 |
-| HTML 互动结果可能与会话脱节 | 未验证读取能力时要求粘贴结果，未收到则保持待核验 |
-| 工具与来源能力依赖宿主 | 无文件权限可聊天续学；离线解释标明待核验内容 |
+| Infers baseline level from goals and self-reports on turn one | Runs up to 3 short diagnostic tasks (one at a time), separating self-reports from observed evidence; skipping is always allowed |
+| Mentions spaced repetition only as a general principle | Implements an adjustable **1, 3, 7, and 14-day** review queue with explicit rules for failed, skipped, and overdue items |
+| Lacks clear completion or exit criteria | Agrees on observable completion standards upfront; transitions to real-world practice or concludes after passing an unseen transfer task |
+| Multiple-choice options can leak answer cues | Defaults to open recall, prediction, debugging, or hands-on demos; passing multiple-choice questions never counts as independent mastery |
+| Reading material is easily conflated with learning | Logs actual user attempts and assistance levels; distinguishes provisional independence from delayed consolidation |
+| Interactive HTML results may not sync back to chat | Requires users to paste results when read-back capability is unverified; keeps status as "pending verification" until received |
+| Tooling and source access depend on the host | Supports pure-chat continuation without file permissions via copyable summaries; marks offline explanations as unverified |
 
-这些是针对固定上游版本的设计调整，不代表任何模型都能稳定执行，也不是学习效果的实验结论。
+*Disclaimer: These are structural adjustments targeting a specific upstream commit—not a guarantee of consistent execution across all models, nor empirical proof of learning outcomes.*
 
-## 安装到 Codex CLI
+## Installation (Codex CLI)
 
-需要支持本地 skills 的 Codex CLI，以及用于下载仓库的 Git；skill 本身没有运行时依赖。
-以下命令适用于 macOS、Linux 或 WSL。目标目录必须尚不存在：
+Requires Codex CLI with local skills support and Git. The skill itself has **zero runtime dependencies**.
+
+Run the following commands on macOS, Linux, or WSL (ensure the target directory does not already exist):
 
 ~~~sh
 mkdir -p ~/.agents/skills
 git clone https://github.com/olele114/teach-to-learn.git ~/.agents/skills/teach-to-learn
 ~~~
 
-在 Codex 输入 /skills 查找 teach-to-learn；若未出现，重启会话。
-也可以把整个仓库放在项目的 .agents/skills/teach-to-learn/，让团队在该项目内使用。
-不要只复制 SKILL.md：references/ 包含流程必需的状态和课程规范。
+Type `/skills` inside Codex to verify `teach-to-learn` appears (restart the session if needed).
+Alternatively, place the entire repository inside `.agents/skills/teach-to-learn/` within a project to share it with your team.
+**Do not copy `SKILL.md` alone:** `references/` contains required state and lesson quality specifications.
 
-安装目录与学习目录不同。请在自己的学习目录启动 Codex，不要在安装目录开始课程。
-其他兼容 agent skills 的宿主可导入此目录；具体安装路径和调用方式以宿主文档为准。
-本仓库是独立 skill，不是插件，也不包含 MCP 服务或模型配置。
-格式与路径依据 [Codex skills 文档](https://developers.openai.com/codex/skills/)。
+> **Important:** Keep your **installation directory** separate from your **learning directory**. Start Codex inside your own learning workspace rather than inside the skill installation folder.
+> Other hosts compatible with the Agent Skills specification can also import this directory; check your host's documentation for exact paths and invocation syntax. This repository is a standalone skill—not a plugin, MCP server, or model configuration.
+> Format and paths follow the [Codex skills documentation](https://developers.openai.com/codex/skills/).
 
-## 第一次使用
+## First Use
 
-在 Codex 的聊天输入中发送以下内容，不是在终端执行：
+Send the following prompt inside the **Codex chat input** (not your OS terminal):
 
 ~~~text
 $teach-to-learn
-我想学习 Python asyncio，目标是能独立修复一个异步请求程序。
-我会基本 Python，但不理解事件循环。每次 15 分钟，用中文讲解。
-先只在聊天里学，不创建文件。
+I want to learn Python asyncio with the goal of independently debugging an async HTTP client.
+I know basic Python, but I don't understand the event loop. Keep sessions to 15 minutes in English.
+Start in chat only—do not create any files yet.
 ~~~
 
-助手应先澄清目标，再一次给一个短诊断任务并等待你的回答。
-回答不知道、要求跳过或缩短课程都可以；跳过会记为“未评估”，不会强制补测。
+The assistant will clarify your goal first, then present **one short diagnostic task at a time** and wait for your response.
+Saying "I don't know," skipping a question, or shortening the lesson is always allowed; skipped items are recorded as `Unassessed` without forced re-testing.
 
-想跨会话保存时，明确给出目录和许可：
+To persist progress across sessions, explicitly specify a directory and grant write permission:
 
 ~~~text
-把这个主题保存在 ./learning/python-async/。
-先告诉我计划写入哪些文件，按我的编辑审批规则处理。
+Save this topic under ./learning/python-async/.
+Tell me which files you plan to write first, and follow my edit approval rules.
 ~~~
 
-助手应先检查已有文件并取得授权；没有权限仍可继续聊天。
-学习资料可能包含你的作答和偏好，请自行决定保存位置及是否分享；skill 不会自动提交或上传。
+The assistant will inspect existing files and ask for approval before writing; if permission is declined, learning continues seamlessly in chat.
+Learning records may contain your responses and preferences—choose your storage location and sharing settings carefully. This skill never commits or uploads files automatically.
 
-## 一次学习会怎样进行
+## How a Session Flows
 
 ~~~text
-你：今天只学如何区分等待与阻塞。
-助手：给出用途、术语、一个已讲解例子，再给不同的新任务，等待回答。
-你：提交自己的预测和理由，或粘贴程序运行结果。
-助手：指出具体正确点和误区；需要时先给小提示。
-你：重新尝试，或说“直接给答案”“今天暂停”。
-助手：给出本次证据、帮助程度、待核验项和下次建议。
+You: Today, just teach me how to distinguish awaiting from blocking.
+Assistant: Explains the purpose, defines essential terms, walks through one worked example, and gives a new open-ended task—then stops and waits.
+You: Submit your prediction and reasoning, or paste your code execution output.
+Assistant: Points out exact strengths and misconceptions; offers a minimal hint first if needed.
+You: Retry the task, or say "just show the answer" / "pause for today."
+Assistant: Summarizes observed evidence, assistance level, unverified items, and next-step recommendations.
 ~~~
 
-这只是流程示例，不是实际学习记录。生成课程、看过答案和说“明白了”都不能自动计为独立完成。
-代码没有执行条件时会标为未运行；HTML 的点击或分数通常不会自动传回聊天。
+This is an illustrative workflow, not an actual log. Generating a lesson, reading an answer, or saying "got it" never counts as independent completion.
+Code that cannot be executed in the current environment is marked `Unrun`; clicks or scores inside generated HTML pages do not automatically sync back to chat.
 
-## 续学与常用请求
+## Resuming & Common Prompts
 
-在同一个学习目录打开新会话，再明确调用：
+Open a new session in the same learning directory and invoke the skill explicitly:
 
 ~~~text
-$teach-to-learn 继续这个目录的学习。先读已保存状态，今天只复习最相关的两项。
+$teach-to-learn Resume learning in this directory. Read the saved state first, and only review the two most relevant items today.
 ~~~
 
-也可以这样调整：
+You can also steer the session at any time:
 
-- “不要再讲新知识；给我一个不重复上次答案的迁移任务。”
-- “这一步太难，先检查我缺哪个先修概念。”
-- “我需要提示，请保留提示使用情况，不要把这次算成独立完成。”
-- “不要 HTML，全部用纯文本；每课最多五分钟。”
-- “修改学习目标前先和我确认；这周不安排额外练习。”
+- *"No new concepts today—give me an unseen transfer task that doesn't repeat last session's answer."*
+- *"This step feels too steep. Check which prerequisite concept I'm missing first."*
+- *"I need a hint—record the assistance used and don't count this attempt as independent."*
+- *"No HTML; keep everything in plain text and cap lessons at 5 minutes."*
+- *"Confirm with me before changing the learning goal, and don't schedule extra drills this week."*
 
-若没有保存文件，把上一轮的续学摘要贴给助手；没有摘要就从一个短诊断恢复，不假设模型记得过去。
+If you are learning without saved files, paste the **resume summary** generated at the end of your previous session. Without a summary, the assistant will start with a brief diagnostic check rather than assuming memory of past sessions.
 
-## 文件结构
+## File Structure
 
-仓库发布六个文件：SKILL.md、README.md、LICENSE、ATTRIBUTION.md，以及 references/ 下的两份规范。
-实际学习目录按需生成以下内容，不会在安装时自动创建：
+The repository ships with six files: `SKILL.md`, `README.md`, `LICENSE`, `ATTRIBUTION.md`, and two specification documents under `references/`.
+Actual learning directories are created on demand when authorized—never automatically upon installation:
 
 ~~~text
 learning/python-async/
-├── MISSION.md                 # 目标、完成标准、偏好
-├── RESOURCES.md               # 来源、章节、版本及核验状态
-├── STATE.md                   # 能力证据、帮助程度和下一步
-├── REVIEW.md                  # 下次学习时读取的复习队列
-├── learning-records/0001-*.md  # 真实作答摘要，不保存标准答案
-├── lessons/0001-*.md           # 小课，按需改用 HTML
-└── reference/                 # 术语表与速查
+├── MISSION.md                  # Observable goal, completion criteria, preferences
+├── RESOURCES.md                # Sources, chapters, versions, and verification status
+├── STATE.md                    # Capability evidence, assistance levels, and next steps
+├── REVIEW.md                   # Spaced repetition queue read at the start of next session
+├── learning-records/0001-*.md  # Summaries of real user attempts (no answer keys stored)
+├── lessons/0001-*.md           # Micro-lessons (or HTML when requested)
+└── reference/                  # Glossaries and quick-reference sheets
 ~~~
 
-详细字段见[状态与复习规范](references/state-and-review.md)；课程要求见[课程质量约定](references/lesson-quality.md)。
+See [State and Review Specification](references/state-and-review.md) for field schemas and [Lesson Quality Conventions](references/lesson-quality.md) for pedagogical rules.
 
-## 如何理解进度与复习
+## Understanding Progress & Spaced Repetition
 
-“未评估 → 需支架 → 初步独立 → 延迟巩固”描述证据强度，不是必须逐级经过的分数等级。
-只有在新任务上独立表现才支持初步独立；之后会话至少隔一天的新任务用于核验延迟巩固。
-默认首次独立完成后一天复习，再根据独立复习表现建议三、七、十四天间隔；可以协商调整。
-日期可靠时明确时区，缺少可靠日期时使用相对学习顺序。错过复习不会清空历史记录。
-本 skill 不发送定时通知，也没有后台排期进程。目标达标后由你选择实践、维护复习或结束。
+- **Evidence Progression:** `Unassessed → Scaffolded → Provisional Independence → Delayed Consolidation` represents evidence strength rather than mandatory linear grades.
+- **Verification Standard:** Solving a new task unaided within the same lesson supports *Provisional Independence*; solving a fresh task in a later session at least one day apart verifies *Delayed Consolidation*.
+- **Review Intervals:** Defaults to a first review **1 day** after initial independent completion, followed by **3, 7, and 14-day** intervals based on recall performance (fully adjustable).
+- **Scheduling & Completion:** Uses explicit timezones when reliable dates are available, or relative session order otherwise. Missing a review never wipes your history. This skill does not send push notifications or run background cron jobs. Once your goal criteria are met, you decide whether to move into real-world practice, maintenance reviews, or conclude.
 
-## 限制与来源
+## Limitations & Attribution
 
-这是给代理执行的教学规范，没有自动评分器或效果保证；公开发布前的文档检查也不等于学习者实验。
-请核对重要来源和操作步骤。未核验内容、用户自述和直接观察必须区分。
-更新前检查本地改动；如无本地修改，可在安装目录执行 git pull --ff-only，再检查 /skills。
-卸载时只移除你确认的安装目录；学习目录独立保留，不要混删。
-本仓库采用 [MIT License](LICENSE)，上游版本、版权与改动说明见 [ATTRIBUTION.md](ATTRIBUTION.md)。
+- This is an instructional specification for AI agents—it contains no automated grader or efficacy guarantee, and pre-release documentation checks do not replace empirical learner studies.
+- Always verify critical sources and operational commands; unverified claims, self-reports, and direct observations are kept strictly separate.
+- **Updating:** Check for local edits first; if clean, run `git pull --ff-only` inside your installation directory and re-check `/skills`.
+- **Uninstalling:** Remove only the confirmed skill installation directory; keep your learning directories intact.
+- Licensed under the [MIT License](LICENSE). Upstream commit details, copyright notices, and changelog notes are documented in [ATTRIBUTION.md](ATTRIBUTION.md).
