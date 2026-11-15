@@ -15,7 +15,7 @@ Ideal for multi-session learning in programming, languages, academic concepts, o
 Observable Goal ─▶ Short Diagnostics (≤3) ─▶ 5–15 min Micro-Lesson ─▶ Open-Ended Attempt ─▶ Evidence & 1/3/7/14d Review Queue ─▶ Unseen Transfer Task
 ```
 
-*(Note: `SKILL.md` and `references/` are authored in Chinese and instruct the model to default to the user's language, so you can interact with it in English or Chinese directly.)*
+*`SKILL.md` and `references/` are authored in Chinese and request the learner's language. Fixed state IDs are shared across languages; behavioral compatibility must be checked with the [manual acceptance scenarios](evals/scenarios.md).*
 
 ## What Changed Compared to the Original `teach`
 
@@ -110,7 +110,8 @@ If you are learning without saved files, paste the **resume summary** generated 
 
 ## File Structure
 
-The repository ships with six files: `SKILL.md`, `README.md`, `LICENSE`, `ATTRIBUTION.md`, and two specification documents under `references/`.
+Core files are `SKILL.md`, `README.md`, `README_CN.md`, `LICENSE`, `ATTRIBUTION.md`, and the specifications under `references/`.
+The [constructed learning example](examples/python-await/README.md) shows a complete workspace; [manual acceptance scenarios](evals/scenarios.md) define checks without adding runtime dependencies.
 Actual learning directories are created on demand when authorized—never automatically upon installation:
 
 ~~~text
@@ -128,10 +129,17 @@ See [State and Review Specification](references/state-and-review.md) for field s
 
 ## Understanding Progress & Spaced Repetition
 
-- **Evidence Progression:** `Unassessed → Scaffolded → Provisional Independence → Delayed Consolidation` represents evidence strength rather than mandatory linear grades.
-- **Verification Standard:** Solving a new task unaided within the same lesson supports *Provisional Independence*; solving a fresh task in a later session at least one day apart verifies *Delayed Consolidation*.
-- **Review Intervals:** Defaults to a first review **1 day** after initial independent completion, followed by **3, 7, and 14-day** intervals based on recall performance (fully adjustable).
-- **Scheduling & Completion:** Uses explicit timezones when reliable dates are available, or relative session order otherwise. Missing a review never wipes your history. This skill does not send push notifications or run background cron jobs. Once your goal criteria are met, you decide whether to move into real-world practice, maintenance reviews, or conclude.
+- **Stable IDs:** Store `unassessed`, `scaffolded`, `provisional`, or `consolidated`; translate display labels without duplicating concept records. Existing Chinese and English labels remain readable.
+- **State changes:** Assessable errors or assistance set the current concept to `scaffolded` while preserving history. The next fresh independent success restores `provisional`; consolidation requires another session at least **24 elapsed hours** after the most recent independent success.
+- **Review intervals:** Initial or recovery success schedules +24 hours with count 0. Only qualifying due reviews advance the count and schedule +72, +168, then +336 hours. Early practice and duplicate events do not advance it.
+- **Scheduling:** Record timezone-aware timestamps; use relative next-session advice when time is unknown. Skips defer the item for the current session without marking failure. Users can change or decline the schedule.
+- **Continuation:** Read legacy records without automatic migration, and confirm missing fields. There are no background notifications or automatic graders; the learner chooses practice, maintenance, or completion.
+
+## Examples, Acceptance & Compatibility
+
+Read the [constructed Python await example](examples/python-await/README.md) for a lesson, two session records, and matching state/review files. It contains answers and is not real learner data or evidence of efficacy.
+Use the [eight manual scenarios](evals/scenarios.md) to check diagnostics, recovery, skipping, timing, permissions, replay, and cross-language continuation. Record host/model versions and observed behavior; a written scenario is not a passed test.
+No real model-behavior or cross-host acceptance run is recorded in this repository yet. Other compatible hosts remain unverified until exercised.
 
 ## Limitations & Attribution
 
